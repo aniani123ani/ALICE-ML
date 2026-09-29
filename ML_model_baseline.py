@@ -82,7 +82,7 @@ for epoch in range(num_epochs):
     model.train()
     predictions = model(X_train)
     loss = criterion(predictions, y_train)
-    #i wanna plot the loss vs. epoch so will add the foll9owing line
+    #i wanna plot the loss vs. epoch so will add the following line
     loss_history.append(loss.item())
     optimizer.zero_grad()
     loss.backward()
@@ -111,8 +111,8 @@ test_rmse = torch.sqrt(test_loss)
 print("Test RMSE:", test_rmse.item(), "GeV")
 
 
-#after this run I see  that the training and test losses are quite close to eachotehr. we have to better train the model
-#they should be reasonably close to each other. not too close or exact to avoid overfitting.
+#after this run I see  that the training and test losses are quite close to each other. we have to  train the model better
+#they should be reasonably close to each other. Not too close or exact to avoid overfitting.
 
 
 
