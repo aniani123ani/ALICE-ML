@@ -47,7 +47,7 @@ y_test = torch.tensor(y_test, dtype=torch.float32).reshape(-1,1)
 print("X_tarain:",X_train.shape, X_train.dtype)
 print("y_train:",y_train.shape, y_train.dtype)
 #when I run this I get [1471,3] for X_train mean we train 1471 training jets and each jet has 3 input featuires as I have adde (pt_jet, pt_leading,pt_soft_sum)
-
+#you can make a new file and define different models there and then you can use them. 
 #NOw I will define the MLP model using PyTorch. I will create a simple feedforward neural network with one hidden layer.
 import torch.nn as nn
 class SimpleMLP(nn.Module):
@@ -64,12 +64,12 @@ class SimpleMLP(nn.Module):
     #i used ReLU activation function. I also wanted to use Signoid. I am not quite sure if it makes sense or not!
 model = SimpleMLP()
 print(model)
-#based on my study for regression model we use Means Squred Error
+#save this also in a different file.(or put it in the top)
 criterion =nn.MSELoss()
-# And Optimizer/learining rate is lr
+
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
-#let's test the training
+#let's test the training, add the validatitionn inside this loop (put the model.eval inside the training loop, also dont name .no_grad, dont include eval because it will  freeze it.)
 num_epochs = 1000
 loss_history =[]
 for epoch in range(num_epochs):
@@ -105,7 +105,7 @@ test_rmse = torch.sqrt(test_loss)
 print("Test RMSE:", test_rmse.item(), "GeV")
 
 
-
+##########################################seperate  the training part
 
 #checking the residuals to see if they are normally distributed
 residuals = y_test - predictions
