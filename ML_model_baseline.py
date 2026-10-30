@@ -200,7 +200,7 @@ print("X_train mean:", X_train.mean(axis=0))
 print("X_train std:", X_train.std(axis=0))
 
 
-#Next i have to translate this data into PyTorch tensors
+
 import torch
 X_train = torch.tensor(X_train, dtype=torch.float32)
 X_test = torch.tensor(X_test, dtype=torch.float32)
@@ -211,7 +211,6 @@ print("X_tarain:",X_train.shape, X_train.dtype)
 print("y_train:",y_train.shape, y_train.dtype)
 #when I run this I get [1471,3] for X_train mean we train 1471 training jets and each jet has 3 input featuires as I have adde (pt_jet, pt_leading,pt_soft_sum)
 
-#NOw I will define the MLP model using PyTorch. I will create a simple feedforward neural network with one hidden layer.
 import torch.nn as nn
 class SimpleMLP(nn.Module):
     def __init__(self):
