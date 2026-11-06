@@ -181,9 +181,6 @@ plt.tight_layout()
 plt.show()
 
 
-# --------------------------------------------------
-# 9. Compare residuals in a selected PPTruth range
-# --------------------------------------------------
 
 pt_min, pt_max = 50, 110
 
@@ -240,9 +237,7 @@ print(
 )
 
 
-# --------------------------------------------------
-# 10. Plot normalized residual distributions
-# --------------------------------------------------
+
 
 x = np.linspace(-30, 30, 1000)
 bins = np.linspace(-30, 30, 61)
