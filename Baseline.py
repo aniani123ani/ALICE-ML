@@ -94,3 +94,61 @@ np.savez(
     dnn_truth=dnn_truth,
     pp_truth_test=pp_truth_test
 )
+
+######### MODEL "2" VAE
+from Models import VAE, AE, loss_function
+vae_model = VAE()
+vae_optimizer = torch.optim.Adam(vae_model.parameters(), lr=0.01)
+train_loss_history=[]
+val_loss_history = []
+train_reconstruction_loss_history=[]
+train_prediction_history=[]
+train_KLD_history=[]
+
+#Training loop for VAE
+for epoch in range(1000):
+    vae_model.train()
+    vae_optimizer.zero_grad()
+    encoded, decoded, mu, log_var, prediction = vae_model(X_train)
+    train_loss = loss_function(decoded, X_train, mu, log_var, prediction, y_train)
+    train_loss.backward()
+    vae_optimizer.step()
+    train_loss_history.append(train_loss.item())
+    
+    #validation
+    vae_model.eval()
+    with torch.no_grad():
+        encoded_val, decoded_val, mu_val, log_var_val, prediction_val = vae_model(X_val)
+        val_loss = loss_function(decoded_val, X_val, mu_val, log_var_val, prediction_val, y_val)
+        val_loss_history.append(val_loss.item())
+    
+    if (epoch+1)%1000==0:
+        print(f"Epoch {epoch+1},"
+              f"Training Loss: {train_loss.item():.4},"
+              f"Validation Loss: {val_loss.item():.4}")
+
+vae_model.eval()
+with torch.no_grad():
+    encoded_test, decoded_test, mu_test, log_var_test, prediction_test = vae_model(X_test)
+    test_loss = loss_function(decoded_test, X_test, mu_test, log_var_test, prediction_test, y_test)
+    
+    print("VAE Test Loss:", test_loss.item())
+
+    test_prediction_loss=nn.MSELoss()(predictions, y_test)
+    test_rmse = torch.sqrt(test_prediction_loss)
+print("VAE Test Prediction Loss:", test_prediction_loss.item())
+print("VAE Test Prediction RMSE:", test_rmse.item())
+vae_pred = predictions.cpu().numpy().flatten()
+vae_truth = y_test.cpu().numpy().flatten()
+np.savez(
+    "vae_plot_data.npz",
+    vae_pred=vae_pred,
+    vae_truth=vae_truth,
+    pp_truth_test=pp_truth_test
+)
+
+
+
+
+
+
