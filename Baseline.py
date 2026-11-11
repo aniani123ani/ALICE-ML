@@ -147,6 +147,120 @@ np.savez(
     pp_truth_test=pp_truth_test
 )
 
+###### MODEL 3
+
+###### MODEL 3 Convolutional Neural Network (CNN)
+import torch
+import pandas as pd
+from torch import nn
+from torch import optim
+from torch.utils.data import DataLoader, TensorDataset
+from tqdm import tqdm
+
+X_train_cnn = X_train.unsqueeze(1)
+X_val_cnn = X_val.unsqueeze(1)
+X_test_cnn = X_test.unsqueeze(1)
+print("X_train_cnn shape:", X_train_cnn.shape)
+print("X_val_cnn shape:", X_val_cnn.shape)
+print("X_test_cnn shape:", X_test_cnn.shape)
+
+
+batch_size = 60
+
+train_dataset = TensorDataset(X_train_cnn, y_train)
+val_dataset = TensorDataset(X_val_cnn, y_val)
+test_dataset = TensorDataset(X_test_cnn, y_test)
+
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=batch_size,shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+
+print("Train loader length:", len(train_loader))
+print("Validation loader length:", len(val_loader))
+print("Test loader length:", len(test_loader))
+
+data, target = next(iter(train_loader))
+print("Data shape:", data.shape)
+print("Target shape:", target.shape)
+
+from Models import CNN
+model=CNN(in_channels=1, num_outputs=1)
+sample_data, sample_target = next(iter(train_loader))
+sample_output = model(sample_data)
+print("output shape:", sample_output.shape)
+print("target shape:", sample_target.shape)
+print("input output:", sample_data.shape)
+
+###Training the CNN model
+criterion = nn.MSELoss()
+optimizer = optim.Adam(model.parameters(), lr=0.01)
+num_epochs = 10
+
+for epoch in range(num_epochs):
+    model.train()
+    train_loss = 0.0
+    for X_batch, y_batch in train_loader:
+        optimizer.zero_grad()
+        predictions = model(X_batch)
+        loss = criterion(predictions, y_batch)
+        loss.backward()
+        optimizer.step()
+        train_loss += loss.item()
+    train_loss += train_loss / len(train_loader)
+
+    #Validation Loop
+    model.eval()
+    val_loss = 0.0
+    with torch.no_grad():
+        for data, target in val_loader:
+            predictions = model(data)
+            loss = criterion(predictions, target)
+            val_loss += loss.item()
+    val_loss += val_loss / len(val_loader)
+    train_loss_history.append(train_loss)
+    val_loss_history.append(val_loss)
+    print(f"Epoch {epoch+1}/{num_epochs}, Training Loss: {train_loss:.4f}")
+    print(f"Epoch {epoch+1}/{num_epochs}, Validation Loss: {val_loss:.4f}")
+np.savez(
+    "cnn_loss_history.npz",
+    train_loss_history=train_loss_history,
+    val_loss_history=val_loss_history
+)
+
+
+
+### Evaluating the Model
+model.eval()
+predictions_list = []
+target_list = []
+with torch.no_grad():
+    for data, target in test_loader:
+        outputs = model(data)
+        predictions_list.extend(outputs.cpu().numpy().flatten())
+        target_list.extend(target.cpu().numpy().flatten())
+
+predictions = np.array(predictions_list)
+targets_list = np.array(target_list)
+test_mse = np.mean((predictions - targets_list) ** 2)
+test_rmse = np.sqrt(test_mse)
+print("CNN Test MSE:", test_mse)
+print("CNN Test RMSE:", test_rmse)        
+
+
+baseline_prediction=torch.mean(y_train).item()
+baseline_predictions = np.full_like(targets_list, baseline_prediction)
+baseline_mse = np.mean((targets_list - baseline_predictions) ** 2)
+baseline_rmse = np.sqrt(baseline_mse)
+print("Baseline Test MSE:", baseline_mse)
+
+cnn_truth = targets_list
+cnn_pred = predictions_list
+np.savez(
+    "cnn_plot_data.npz",
+    cnn_pred=cnn_pred,
+    cnn_truth=cnn_truth,
+    pp_truth_test=pp_truth_test
+)
 
 
 
