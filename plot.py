@@ -316,3 +316,173 @@ plt.tight_layout()
 plt.show()
 plt.close(fig)
 
+
+
+##### PLOTS 3 CNNs
+
+
+# PLOT1 is for the loss
+
+loss_data = np.load("cnn_loss_history.npz")
+
+cnn_train_loss = loss_data["train_loss_history"]
+cnn_val_loss = loss_data["val_loss_history"]
+
+plt.figure(figsize=(8, 5))
+
+plt.plot(cnn_train_loss, label="Training Loss")
+plt.plot(cnn_val_loss, label="Validation Loss")
+
+plt.xlabel("Epoch")
+plt.ylabel("MSE Loss")
+plt.title("CNN Training and Validation Loss")
+
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+plt.close()
+
+
+# PLOT 2 is the 2D Histogram
+
+plot_data = np.load("cnn_plot_data.npz")
+
+cnn_pred = plot_data["cnn_pred"]
+cnn_truth = plot_data["cnn_truth"]
+cnn_pp_truth = plot_data["pp_truth_test"]
+
+cnn_residuals = cnn_truth - cnn_pred
+
+fig, ax = plt.subplots(figsize=(8, 7))
+
+counts, xedges, yedges, im = ax.hist2d(
+    cnn_pp_truth,
+    cnn_residuals,
+    bins=50,
+    range=[[0, 500], [-150, 250]],
+    cmap="plasma",
+    norm=LogNorm(vmin=1)
+)
+
+ax.axhline(0, color="red", linestyle="--", alpha=0.7)
+
+ax.set_xlabel(r"$p_T^{\mathrm{ppTruth}}$ [GeV]")
+
+ax.set_ylabel(
+    r"$p_T^{\mathrm{PbPbtruth}} - p_T^{\mathrm{CNN}}$ [GeV]"
+)
+
+ax.set_title("CNN residuals")
+
+cbar = fig.colorbar(im, ax=ax)
+cbar.set_label("Number of jets per bin")
+
+plt.tight_layout()
+plt.show()
+plt.close(fig)
+
+
+# PLOT 3: Gaussian Fit
+
+pt_min, pt_max = 50, 110
+fit_min, fit_max = -5, 5
+
+mask = (
+    (cnn_pp_truth >= pt_min) &
+    (cnn_pp_truth <= pt_max)
+)
+
+residual_selected = cnn_residuals[mask]
+
+residual_selected = residual_selected[
+    np.isfinite(residual_selected)
+]
+
+print("Number of selected CNN jets:", len(residual_selected))
+
+if len(residual_selected) < 2:
+    raise ValueError("Too few selected residuals to fit a Gaussian.")
+
+print("Mean residual:", np.mean(residual_selected), "GeV")
+
+print(
+    "Residual standard deviation:",
+    np.std(residual_selected),
+    "GeV"
+)
+
+
+peak = residual_selected[
+    (residual_selected >= fit_min) &
+    (residual_selected <= fit_max)
+]
+
+if len(peak) < 2:
+    raise ValueError(
+        "Too few residuals between -5 and 5 GeV for the Gaussian fit."
+    )
+
+mu_cnn, sigma_cnn = norm.fit(peak)
+
+print(
+    f"CNN Gaussian: mean = {mu_cnn:.2f} GeV, "
+    f"sigma = {sigma_cnn:.2f} GeV"
+)
+
+
+# Plot settings
+
+x_min, x_max = -30, 30
+y_min, y_max = 0, 0.6
+
+bins = np.linspace(x_min, x_max, 61)
+x = np.linspace(x_min, x_max, 1000)
+
+fig, ax = plt.subplots(figsize=(8, 6))
+
+
+
+
+ax.hist(
+    residual_selected,
+    bins=bins,
+    density=True,
+    histtype="step",
+    linewidth=1.8,
+    label="CNN"
+)
+
+ax.plot(
+    x,
+    norm.pdf(x, mu_cnn, sigma_cnn),
+    "--",
+    linewidth=1.8,
+    label=(
+        fr"CNN Gaussian: $\mu={mu_cnn:.1f}$, "
+        fr"$\sigma={sigma_cnn:.1f}$ GeV"
+    )
+)
+
+ax.axvline(0, color="black", linestyle=":", alpha=0.8)
+
+ax.set_xlim(x_min, x_max)
+ax.set_ylim(y_min, y_max)
+
+ax.set_xlabel(r"Residual $\delta p_T$ [GeV]")
+ax.set_ylabel(r"Probability density [GeV$^{-1}$]")
+
+ax.set_title(
+    fr"CNN residuals for "
+    fr"${pt_min} \leq p_T^{{\mathrm{{ppTruth}}}} "
+    fr"\leq {pt_max}$ GeV"
+)
+
+ax.legend(frameon=False, fontsize=9)
+ax.grid(True, alpha=0.2)
+
+plt.tight_layout()
+plt.show()
+plt.close(fig)
+
+
